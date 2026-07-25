@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orçamento da Mudança</title>
+<style>
+  :root{
+    --bg:#FBF8F2;
+    --surface:#F2ECDE;
+    --surface-2:#FBF8F2;
+    --edge:#D9CCB0;
+    --text:#2B2622;
+    --text-dim:#7A6F60;
+    --kraft:#E7DAC2;
+    --mint:#4B7A51;
+    --mint-dim:#E3ECDF;
+    --amber:#B4842A;
+    --amber-dim:#F3E7D0;
+    --coral:#B8402A;
+    --coral-dim:#F5E1DB;
+    --r:10px;
+    --f:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+    --m:'SFMono-Regular',Menlo,Consolas,'Liberation Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--f);-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:760px;margin:0 auto;padding-bottom:90px;}
+
+  header{padding:26px 18px 22px;background:var(--kraft);}
+  header h1{margin:0 0 5px;font-size:23px;font-weight:800;letter-spacing:-0.01em;text-transform:uppercase;}
+  header p{margin:0;font-size:13.5px;color:var(--text);opacity:0.72;}
+
+  .tabs{display:flex;gap:6px;padding:14px 14px 12px;position:sticky;top:0;background:var(--bg);z-index:9;border-bottom:1px solid var(--edge);}
+  .tab{flex:1;background:var(--surface);border:1px solid var(--edge);color:var(--text-dim);border-radius:var(--r);padding:11px 4px;font-size:13px;font-weight:700;font-family:var(--f);cursor:pointer;}
+  .tab.on{background:var(--text);border-color:var(--text);color:var(--bg);}
+
+  .panel{display:none;padding:14px 14px 0;}
+  .panel.on{display:block;}
+
+  .btn{font-family:var(--f);font-weight:600;font-size:13.5px;border-radius:var(--r);cursor:pointer;padding:11px 15px;border:1px solid var(--edge);background:var(--surface-2);color:var(--text);}
+  .btn-go{background:var(--text);border-color:var(--text);color:var(--bg);}
+  .btn-wide{width:100%;margin-bottom:12px;}
+  .btn-sm{padding:7px 11px;font-size:12px;}
+  .btn-row{display:flex;gap:8px;margin-bottom:14px;}
+  .btn-row .btn{flex:1;}
+
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px;}
+  .metric{background:var(--surface);border:1px solid var(--edge);border-radius:var(--r);padding:11px 8px;text-align:center;}
+  .metric b{display:block;font-family:var(--m);font-size:14px;font-weight:700;margin-bottom:3px;word-break:break-word;}
+  .metric span{font-size:9.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);}
+
+  .blank{text-align:center;color:var(--text-dim);font-size:13.5px;padding:34px 16px;border:1px dashed var(--edge);border-radius:var(--r);}
+
+  .card{background:var(--surface);border:1px solid var(--edge);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .card.p1{border-left:4px solid var(--coral);}
+  .card.p2{border-left:4px solid var(--amber);}
+  .card.p3{border-left:4px solid var(--mint);}
+
+  .card-head{display:flex;gap:9px;align-items:center;margin-bottom:12px;}
+  .nm{flex:1;min-width:0;background:transparent;border:none;border-bottom:1px solid var(--edge);color:var(--text);font-family:var(--f);font-size:15.5px;font-weight:700;padding:5px 2px;}
+  .nm:focus{outline:none;border-bottom-color:var(--text);}
+  .nm::placeholder{color:var(--text-dim);font-weight:400;}
+  .x{background:transparent;border:none;color:var(--text-dim);font-size:17px;cursor:pointer;padding:3px 5px;line-height:1;flex:0 0 auto;}
+
+  .pill{flex:0 0 auto;font-family:var(--m);font-size:10.5px;font-weight:700;border-radius:16px;padding:6px 9px;border:1px solid var(--edge);background:var(--surface-2);color:var(--text);}
+  .pill[data-v="1"]{background:var(--coral-dim);border-color:var(--coral);color:var(--coral);}
+  .pill[data-v="2"]{background:var(--amber-dim);border-color:var(--amber);color:var(--amber);}
+  .pill[data-v="3"]{background:var(--mint-dim);border-color:var(--mint);color:var(--mint);}
+
+  .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);margin:0 0 7px;}
+
+  .shop{background:var(--surface-2);border:1px solid var(--edge);border-radius:var(--r);padding:9px;margin-bottom:7px;}
+  .shop.best{border-color:var(--mint);}
+  .shop.pick{border-color:var(--mint);box-shadow:0 0 0 1px var(--mint);}
+  .shop-r1{display:flex;gap:7px;margin-bottom:6px;}
+  .shop input{background:transparent;border:none;border-bottom:1px solid var(--edge);color:var(--text);font-family:var(--f);font-size:13px;padding:4px 2px;min-width:0;}
+  .shop input:focus{outline:none;border-bottom-color:var(--mint);}
+  .shop input::placeholder{color:var(--text-dim);}
+  .s-nm{flex:1;}
+  .s-pr{flex:0 0 92px;font-family:var(--m);font-weight:600;text-align:right;}
+  .shop-r2{display:flex;gap:7px;align-items:center;}
+  .s-lk{flex:1;font-size:12px;}
+  .go{flex:0 0 auto;text-decoration:none;font-size:14px;padding:2px 3px;}
+  .go.off{display:none;}
+  .tag{font-family:var(--m);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mint);border:1px solid var(--mint);border-radius:10px;padding:2px 6px;display:none;flex:0 0 auto;}
+  .shop.best .tag{display:inline-block;}
+  .mini{flex:0 0 auto;width:27px;height:27px;border-radius:7px;border:1px solid var(--edge);background:var(--surface-2);color:var(--text-dim);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .mini.on{background:var(--mint);border-color:var(--mint);color:#FFF;}
+
+  .add-shop{width:100%;background:transparent;border:1px dashed var(--text-dim);color:var(--text-dim);border-radius:var(--r);padding:8px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:12px;font-family:var(--f);}
+
+  .card-foot{display:flex;gap:11px;align-items:flex-end;flex-wrap:wrap;border-top:1px dashed var(--edge);padding-top:11px;}
+  .fld{display:flex;flex-direction:column;gap:4px;}
+  .fld label{font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);}
+  .fld select{background:var(--surface-2);border:1px solid var(--edge);color:var(--text);border-radius:7px;padding:6px 7px;font-family:var(--m);font-size:12.5px;font-weight:600;}
+  .sum{margin-left:auto;text-align:right;}
+  .sum b{display:block;font-family:var(--m);font-size:15px;}
+  .sum span{display:block;font-family:var(--m);font-size:10.5px;color:var(--text-dim);margin-top:2px;}
+
+  .line{display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--edge);border-radius:var(--r);padding:10px;margin-bottom:8px;}
+  .line input{background:transparent;border:none;border-bottom:1px solid var(--edge);color:var(--text);font-family:var(--f);font-size:13.5px;padding:4px 2px;min-width:0;}
+  .line input:focus{outline:none;border-bottom-color:var(--text);}
+  .line input::placeholder{color:var(--text-dim);}
+  .l-nm{flex:1;font-weight:500;}
+  .l-vl{flex:0 0 84px;font-family:var(--m);text-align:right;}
+  .line select{flex:0 0 auto;background:var(--surface-2);border:1px solid var(--edge);color:var(--text);border-radius:7px;padding:5px 5px;font-family:var(--m);font-size:11.5px;}
+
+  .chart{background:var(--surface-2);border:1px solid var(--edge);border-radius:14px;padding:15px 13px 11px;margin-bottom:15px;box-shadow:0 6px 20px rgba(43,38,34,0.09);}
+  .chart h3{margin:0 0 3px;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:0.03em;}
+  .chart p{margin:0 0 14px;font-size:12px;color:var(--text-dim);}
+  .bars{display:flex;align-items:flex-end;gap:9px;overflow-x:auto;padding:6px 2px 2px;min-height:128px;}
+  .bcol{flex:0 0 auto;min-width:36px;display:flex;flex-direction:column;align-items:center;}
+  .bval{font-family:var(--m);font-size:8.5px;color:var(--text-dim);margin-bottom:4px;white-space:nowrap;}
+  .bar{width:22px;border-radius:4px 4px 2px 2px;background:linear-gradient(180deg,var(--amber),#8d6720);min-height:4px;}
+  .bar.neg{background:linear-gradient(180deg,var(--mint),#2f5334);}
+  .blbl{font-family:var(--m);font-size:10px;color:var(--text-dim);margin-top:5px;}
+
+  .note{font-size:12px;color:var(--text-dim);line-height:1.55;margin:0 0 12px;}
+  .h3{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:0.03em;margin:20px 0 3px;}
+
+  .ta{width:100%;min-height:96px;background:var(--surface);border:1px solid var(--edge);border-radius:var(--r);color:var(--text);font-family:var(--m);font-size:11px;padding:9px;margin-bottom:9px;}
+
+  .dot{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;font-family:var(--m);font-size:11px;font-weight:700;padding:9px 15px;border-radius:22px;z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;max-width:88vw;text-align:center;box-shadow:0 4px 16px rgba(43,38,34,0.2);}
+  .dot.show{opacity:1;pointer-events:auto;}
+  .dot.busy{background:var(--amber);color:#FFF;}
+  .dot.good{background:var(--mint);color:#FFF;}
+  .dot.bad{background:var(--coral);color:#FFF;cursor:pointer;}
+
+  .banner{background:var(--coral-dim);border:1px solid var(--coral);color:var(--text);border-radius:var(--r);padding:12px;font-size:12.5px;line-height:1.5;margin:12px 14px 0;}
+  .banner.hide{display:none;}
+  .banner b{color:var(--coral);}
+
+  footer{padding:20px 18px;font-size:11px;color:var(--text-dim);text-align:center;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Orçamento da Mudança</h1>
+    <p>Itens, contas fixas e quanto sai por mês.</p>
+  </header>
+
+  <div id="banner" class="banner hide"></div>
+
+  <div class="tabs">
+    <button class="tab on" data-go="i">Itens</button>
+    <button class="tab" data-go="f">Contas fixas</button>
+    <button class="tab" data-go="r">Resumo</button>
+  </div>
+
+  <section class="panel on" id="p-i">
+    <div class="chart">
+      <h3>Desembolso mês a mês</h3>
+      <p>Parcelas + contas fixas − vendas</p>
+      <div id="bars-top" class="bars"></div>
+    </div>
+    <div id="m-i" class="metrics"></div>
+    <div class="btn-row">
+      <button class="btn btn-go" id="b-add-i">+ Adicionar item</button>
+      <button class="btn" id="b-wipe">Limpar tudo</button>
+    </div>
+    <div id="list-i"></div>
+  </section>
+
+  <section class="panel" id="p-f">
+    <p class="note">Contas que se repetem todo mês (aluguel, condomínio, internet). Entram a partir do mês de início.</p>
+    <button class="btn btn-go btn-wide" id="b-add-f">+ Adicionar conta fixa</button>
+    <div id="list-f"></div>
+    <div id="m-f" class="metrics"></div>
+  </section>
+
+  <section class="panel" id="p-r">
+    <div class="chart">
+      <h3>Desembolso mês a mês</h3>
+      <p>Parcelas + contas fixas − vendas</p>
+      <div id="m-r" class="metrics"></div>
+      <div id="bars" class="bars"></div>
+    </div>
+
+    <p class="h3">Coisas que vamos vender</p>
+    <p class="note">O valor abate no mês em que vocês esperam vender.</p>
+    <button class="btn btn-go btn-wide" id="b-add-v">+ Adicionar item pra vender</button>
+    <div id="list-v"></div>
+    <div id="m-v" class="metrics"></div>
+
+    <p class="h3">Guardar / recuperar</p>
+    <p class="note">Salva uma cópia fora do app. Abre a folha de compartilhar do celular: dá pra mandar no WhatsApp pro seu namorado, salvar em Arquivos ou jogar nas Notas.</p>
+    <button class="btn btn-go btn-wide" id="b-share">📤 Guardar cópia</button>
+    <details id="det-manual">
+      <summary class="note" style="cursor:pointer;">ou usar texto manualmente</summary>
+      <textarea id="ta" class="ta" placeholder="Cole aqui um backup pra restaurar" style="margin-top:9px;"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-sm" id="b-out">Copiar dados</button>
+        <button class="btn btn-sm" id="b-in">Restaurar</button>
+      </div>
+    </details>
+    <p class="note" id="bk-msg"></p>
+  </section>
+
+  <footer>Os dados são compartilhados entre você e seu namorado em tempo real. Se ficar sem internet, continua salvando neste aparelho e sincroniza sozinho depois.</footer>
+</div>
+
+<div id="dot" class="dot"></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ---------- helpers ---------- */
+function uid(){ return 'k' + Math.random().toString(36).slice(2,9) + Date.now().toString(36); }
+function money(n){
+  if(n === null || n === undefined || isNaN(n)) return '—';
+  return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+function moneyShort(n){ return money(n).replace('R$','').trim(); }
+function num(raw){
+  if(raw === null || raw === undefined) return NaN;
+  var s = String(raw).trim();
+  if(!s) return NaN;
+  s = s.replace(/[^\d,.-]/g,'');
+  if(s.indexOf(',') > -1 && s.indexOf('.') > -1) s = s.replace(/\./g,'').replace(',','.');
+  else if(s.indexOf(',') > -1) s = s.replace(',','.');
+  return parseFloat(s);
+}
+function esc(s){
+  return String(s || '').replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function months(sel){
+  var o = '';
+  for(var i=1;i<=18;i++) o += '<option value="'+i+'"'+(sel===i?' selected':'')+'>Mês '+i+'</option>';
+  return o;
+}
+function byId(arr, id){
+  for(var i=0;i<arr.length;i++) if(arr[i].id === id) return arr[i];
+  return null;
+}
+function wait(fn, ms){
+  var t;
+  return function(){ var a = arguments; clearTimeout(t); t = setTimeout(function(){ fn.apply(null,a); }, ms); };
+}
+
+/* ---------- state ---------- */
+var D = { items:[], fixed:[], sales:[] };
+var KEY = 'orcamento-mudanca-v3';
+var DRAFT = 'orcamento-mudanca-v3-rascunho';
+
+function mkShop(){ return {id:uid(), nm:'', pr:'', lk:''}; }
+function mkItem(){ return {id:uid(), nm:'', pri:2, par:1, mes:1, pick:null, shops:[mkShop()]}; }
+function mkFixed(){ return {id:uid(), nm:'', vl:'', mes:1}; }
+function mkSale(){ return {id:uid(), nm:'', vl:'', mes:1}; }
+
+function best(it){
+  var b = null;
+  for(var i=0;i<it.shops.length;i++){
+    var v = num(it.shops[i].pr);
+    if(!isNaN(v) && v > 0 && (!b || v < num(b.pr))) b = it.shops[i];
+  }
+  return b;
+}
+function picked(it){
+  if(it.pick){
+    var p = byId(it.shops, it.pick);
+    if(p){ var v = num(p.pr); if(!isNaN(v) && v > 0) return p; }
+  }
+  return best(it);
+}
+
+/* ---------- supabase ---------- */
+var ROW_ID = 'principal';
+var sb = (window.SUPABASE_URL && window.SUPABASE_KEY && window.supabase)
+  ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY)
+  : null;
+
+/* ---------- salvamento: Supabase (compartilhado) + localStorage (cópia local) ---------- */
+var dot = document.getElementById('dot');
+var banner = document.getElementById('banner');
+
+function flag(kind, txt){
+  dot.className = 'dot show ' + kind;
+  dot.textContent = txt;
+  if(kind === 'good') setTimeout(function(){ dot.classList.remove('show'); }, 1400);
+}
+function showBanner(html){
+  banner.innerHTML = html;
+  banner.classList.remove('hide');
+}
+function hideBanner(){ banner.classList.add('hide'); }
+
+function payload(){ return JSON.stringify(D); }
+
+function hasStorage(){
+  try{
+    var t = '__teste__';
+    window.localStorage.setItem(t, '1');
+    window.localStorage.removeItem(t);
+    return true;
+  }catch(e){ return false; }
+}
+
+function saveLocal(){
+  if(!hasStorage()) return false;
+  try{
+    window.localStorage.setItem(KEY, payload());
+    window.localStorage.setItem(KEY + '-quando', new Date().toISOString());
+    return true;
+  }catch(e){ return false; }
+}
+
+function loadLocal(){
+  if(!hasStorage()) return false;
+  try{
+    var raw = window.localStorage.getItem(KEY);
+    if(raw){
+      var o = JSON.parse(raw);
+      D.items = Array.isArray(o.items) ? o.items : [];
+      D.fixed = Array.isArray(o.fixed) ? o.fixed : [];
+      D.sales = Array.isArray(o.sales) ? o.sales : [];
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+var lastWrittenAt = null;   // hora do nosso proprio ultimo envio, pra ignorar o eco do realtime
+var lastAppliedAt = null;   // hora do dado (nosso ou remoto) que esta na tela agora
+var dirty = false;          // true quando tem edição local que ainda não sincronizou
+
+function save(){
+  flag('busy','Salvando…');
+  var okLocal = saveLocal();
+  if(!okLocal){
+    flag('bad','Sem salvamento — use Guardar cópia');
+    showBanner('<b>Este navegador está bloqueando o salvamento local.</b> Costuma ser navegação privada/anônima. Abra numa aba normal, ou use "Guardar cópia" no Resumo pra não perder nada.');
+  }
+
+  if(!sb){
+    if(okLocal){ flag('good','Salvo (só neste aparelho)'); hideBanner(); }
+    return;
+  }
+
+  if(!navigator.onLine){
+    dirty = true;
+    flag('bad','Sem internet — salvando só aqui');
+    showBanner('<b>Você está sem internet.</b> Suas edições continuam sendo salvas neste aparelho e sincronizam sozinhas assim que a conexão voltar.');
+    return;
+  }
+
+  var now = new Date().toISOString();
+  lastWrittenAt = now;
+  sb.from('orcamento').upsert({ id: ROW_ID, dados: D, atualizado_em: now }).then(function(res){
+    if(res.error){
+      dirty = true;
+      flag('bad','Não sincronizou — toque aqui');
+      showBanner('<b>Não deu pra sincronizar agora.</b> Seus dados continuam salvos neste aparelho; a gente tenta de novo sozinho. Verifica sua internet.');
+      return;
+    }
+    dirty = false;
+    lastAppliedAt = now;
+    if(okLocal){ flag('good','Salvo'); hideBanner(); }
+  });
+}
+var saveSoon = wait(save, 700);
+
+dot.addEventListener('click', function(){
+  if(dot.classList.contains('bad')){ save(); }
+});
+
+function applyRemote(dados){
+  D.items = Array.isArray(dados.items) ? dados.items : [];
+  D.fixed = Array.isArray(dados.fixed) ? dados.fixed : [];
+  D.sales = Array.isArray(dados.sales) ? dados.sales : [];
+  draw();
+  saveLocal();
+}
+
+/* ---------- realtime: atualiza sozinho quando o outro edita ---------- */
+var pendingRemote = null; // guarda atualização remota que chegou enquanto alguém digitava
+
+function isEditing(){
+  var el = document.activeElement;
+  if(!el) return false;
+  var tag = el.tagName;
+  if(tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') return false;
+  return document.querySelector('.wrap').contains(el);
+}
+
+function tryApplyRemote(dados, atualizadoEm){
+  if(atualizadoEm){
+    if(atualizadoEm === lastWrittenAt) return; // eco da nossa propria escrita
+    if(lastAppliedAt && atualizadoEm <= lastAppliedAt) return; // já é o que temos (ou mais velho)
+  }
+  if(isEditing()){
+    pendingRemote = { dados: dados, atualizadoEm: atualizadoEm };
+    return;
+  }
+  lastAppliedAt = atualizadoEm || lastAppliedAt;
+  applyRemote(dados);
+}
+
+document.querySelector('.wrap').addEventListener('focusout', function(){
+  setTimeout(function(){
+    if(pendingRemote && !isEditing()){
+      var p = pendingRemote; pendingRemote = null;
+      tryApplyRemote(p.dados, p.atualizadoEm);
+    }
+  }, 50);
+});
+
+function refreshFromRemote(){
+  if(!sb) return;
+  sb.from('orcamento').select('dados,atualizado_em').eq('id', ROW_ID).single().then(function(res){
+    if(res.error || !res.data) return;
+    tryApplyRemote(res.data.dados || {}, res.data.atualizado_em);
+  });
+}
+
+var pollTimer = null;
+function startPolling(){
+  if(pollTimer) return;
+  pollTimer = setInterval(refreshFromRemote, 15000);
+}
+function stopPolling(){
+  if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+}
+
+var realtimeStarted = false;
+function ensureRealtimeStarted(){
+  if(realtimeStarted || !sb) return;
+  realtimeStarted = true;
+  startPolling();
+  startRealtime();
+}
+
+function startRealtime(){
+  if(!sb) return;
+  sb.channel('orcamento-mudanca')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orcamento', filter: 'id=eq.' + ROW_ID }, function(msg){
+      if(!msg || !msg.new) return;
+      tryApplyRemote(msg.new.dados || {}, msg.new.atualizado_em);
+    })
+    .subscribe(function(status){
+      if(status === 'SUBSCRIBED'){
+        stopPolling();
+        refreshFromRemote(); // pega o que mudou enquanto reconectava
+      } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+        startPolling(); // realtime falhou, segue funcionando por polling
+      }
+    });
+}
+
+window.addEventListener('offline', function(){
+  flag('bad','Sem internet — salvando só aqui');
+  showBanner('<b>Você está sem internet.</b> Suas edições continuam sendo salvas neste aparelho e sincronizam sozinhas assim que a conexão voltar.');
+});
+window.addEventListener('online', function(){
+  ensureRealtimeStarted();
+  if(dirty){ save(); } else { flag('busy','Conectando…'); refreshFromRemote(); hideBanner(); }
+});
+
+function load(){
+  loadLocal();
+  draw();
+
+  if(!sb) return;
+
+  if(!navigator.onLine){
+    flag('bad','Sem internet — usando cópia local');
+    showBanner('<b>Você está sem internet.</b> Mostrando a última cópia salva neste aparelho; sincroniza sozinho quando a conexão voltar.');
+    return;
+  }
+
+  ensureRealtimeStarted();
+
+  flag('busy','Carregando…');
+  sb.from('orcamento').select('dados,atualizado_em').eq('id', ROW_ID).single().then(function(res){
+    if(res.error || !res.data){
+      flag('bad','Não conectou — usando cópia local');
+      showBanner('<b>Não consegui buscar os dados compartilhados agora.</b> Mostrando a última cópia salva neste aparelho.');
+      return;
+    }
+    applyRemote(res.data.dados || {});
+    lastAppliedAt = res.data.atualizado_em || null;
+    dot.classList.remove('show');
+  });
+}
+
+/* ---------- render: itens ---------- */
+var listI = document.getElementById('list-i');
+
+function shopHTML(s, bId, pId){
+  var on = s.id === pId;
+  return '<div class="shop '+(s.id===bId?'best':'')+' '+(on?'pick':'')+'" data-s="'+s.id+'">'
+    + '<div class="shop-r1">'
+      + '<input class="s-nm" type="text" placeholder="Loja" value="'+esc(s.nm)+'" data-k="nm">'
+      + '<input class="s-pr" type="text" inputmode="decimal" placeholder="0,00" value="'+esc(s.pr)+'" data-k="pr">'
+    + '</div>'
+    + '<div class="shop-r2">'
+      + '<input class="s-lk" type="url" placeholder="Link (opcional)" value="'+esc(s.lk)+'" data-k="lk">'
+      + '<a class="go '+(s.lk?'':'off')+'" href="'+esc(s.lk)+'" target="_blank" rel="noopener">↗</a>'
+      + '<span class="tag">menor</span>'
+      + '<button class="mini '+(on?'on':'')+'" data-a="pick" title="Escolher esta">✓</button>'
+      + '<button class="mini" data-a="delshop" title="Remover">✕</button>'
+    + '</div>'
+  + '</div>';
+}
+
+function itemHTML(it){
+  var b = best(it), p = picked(it);
+  var bId = b ? b.id : null, pId = p ? p.id : null;
+  var pv = p ? num(p.pr) : NaN;
+  var par = '';
+  for(var n=1;n<=18;n++) par += '<option value="'+n+'"'+(it.par===n?' selected':'')+'>'+n+'x</option>';
+
+  return '<div class="card p'+it.pri+'" data-i="'+it.id+'">'
+    + '<div class="card-head">'
+      + '<input class="nm" type="text" placeholder="Nome do item" value="'+esc(it.nm)+'" data-k="nm">'
+      + '<select class="pill" data-v="'+it.pri+'" data-a="pri">'
+        + '<option value="1"'+(it.pri===1?' selected':'')+'>Alta</option>'
+        + '<option value="2"'+(it.pri===2?' selected':'')+'>Média</option>'
+        + '<option value="3"'+(it.pri===3?' selected':'')+'>Baixa</option>'
+      + '</select>'
+      + '<button class="x" data-a="delitem">✕</button>'
+    + '</div>'
+    + '<p class="lbl">Onde vi</p>'
+    + it.shops.map(function(s){ return shopHTML(s, bId, pId); }).join('')
+    + '<button class="add-shop" data-a="addshop">+ outra loja</button>'
+    + '<div class="card-foot">'
+      + '<div class="fld"><label>Parcelas</label><select data-a="par">'+par+'</select></div>'
+      + '<div class="fld"><label>Compra em</label><select data-a="mes">'+months(it.mes)+'</select></div>'
+      + '<div class="sum"><b>'+(p?money(pv):'—')+'</b><span>'+(p?(it.par+'x de '+money(pv/it.par)):'sem preço')+'</span></div>'
+    + '</div>'
+  + '</div>';
+}
+
+function sortItems(){
+  return D.items.slice().sort(function(a,b){
+    if(a.pri !== b.pri) return a.pri - b.pri;
+    return (a.mes||1) - (b.mes||1);
+  });
+}
+
+function drawItems(){
+  listI.innerHTML = D.items.length
+    ? sortItems().map(itemHTML).join('')
+    : '<div class="blank">Nenhum item ainda.<br>Toque em <b>+ Adicionar item</b>.</div>';
+}
+
+function drawMetricsI(){
+  var tot = 0, sem = 0;
+  D.items.forEach(function(it){ var p = picked(it); if(p) tot += num(p.pr); else sem++; });
+  document.getElementById('m-i').innerHTML =
+      '<div class="metric"><b>'+money(tot)+'</b><span>Total</span></div>'
+    + '<div class="metric"><b>'+D.items.length+'</b><span>Itens</span></div>'
+    + '<div class="metric"><b>'+sem+'</b><span>Sem preço</span></div>';
+}
+
+/* atualiza so os derivados de um card, sem perder o foco do input */
+function touchItem(id){
+  var it = byId(D.items, id);
+  var card = listI.querySelector('[data-i="'+id+'"]');
+  if(!it || !card) return;
+  var b = best(it), p = picked(it);
+  var bId = b ? b.id : null, pId = p ? p.id : null;
+  var shops = card.querySelectorAll('.shop');
+  for(var i=0;i<shops.length;i++){
+    var sid = shops[i].getAttribute('data-s');
+    shops[i].classList.toggle('best', sid === bId);
+    shops[i].classList.toggle('pick', sid === pId);
+    var mb = shops[i].querySelector('[data-a="pick"]');
+    if(mb) mb.classList.toggle('on', sid === pId);
+  }
+  var pv = p ? num(p.pr) : NaN;
+  var sb = card.querySelector('.sum b'), ss = card.querySelector('.sum span');
+  if(sb) sb.textContent = p ? money(pv) : '—';
+  if(ss) ss.textContent = p ? (it.par+'x de '+money(pv/it.par)) : 'sem preço';
+}
+
+/* ---------- render: linhas simples (fixas / vendas) ---------- */
+function lineHTML(o, kind, ph){
+  return '<div class="line" data-'+kind+'="'+o.id+'">'
+    + '<input class="l-nm" type="text" placeholder="'+ph+'" value="'+esc(o.nm)+'" data-k="nm">'
+    + '<input class="l-vl" type="text" inputmode="decimal" placeholder="0,00" value="'+esc(o.vl)+'" data-k="vl">'
+    + '<select data-k="mes">'+months(o.mes)+'</select>'
+    + '<button class="x" data-a="del">✕</button>'
+  + '</div>';
+}
+function drawFixed(){
+  document.getElementById('list-f').innerHTML = D.fixed.length
+    ? D.fixed.map(function(o){ return lineHTML(o,'f','Ex: Aluguel'); }).join('')
+    : '<div class="blank">Nenhuma conta fixa ainda.</div>';
+  var t = 0;
+  D.fixed.forEach(function(o){ var v = num(o.vl); if(!isNaN(v)) t += v; });
+  document.getElementById('m-f').innerHTML =
+      '<div class="metric"><b>'+money(t)+'</b><span>Por mês</span></div>'
+    + '<div class="metric"><b>'+D.fixed.length+'</b><span>Contas</span></div>'
+    + '<div class="metric"><b>'+money(t*12)+'</b><span>Em 12 meses</span></div>';
+}
+function drawSales(){
+  document.getElementById('list-v').innerHTML = D.sales.length
+    ? D.sales.map(function(o){ return lineHTML(o,'v','Ex: sofá antigo'); }).join('')
+    : '<div class="blank">Nada cadastrado ainda.</div>';
+  var t = 0;
+  D.sales.forEach(function(o){ var v = num(o.vl); if(!isNaN(v)) t += v; });
+  document.getElementById('m-v').innerHTML =
+      '<div class="metric"><b>'+money(t)+'</b><span>Total esperado</span></div>'
+    + '<div class="metric"><b>'+D.sales.length+'</b><span>Itens</span></div>';
+}
+
+/* ---------- render: resumo ---------- */
+function drawResumo(){
+  var map = [], last = 5, fixMonthly = 0, salesTot = 0;
+
+  D.items.forEach(function(it){
+    var p = picked(it);
+    if(!p) return;
+    var v = num(p.pr), n = it.par || 1, each = v / n, from = (it.mes||1) - 1;
+    for(var k=0;k<n;k++){
+      var i = from + k;
+      if(i > 35) continue;
+      map[i] = (map[i]||0) + each;
+      if(i > last) last = i;
+    }
+  });
+  D.fixed.forEach(function(o){
+    var v = num(o.vl);
+    if(isNaN(v) || v <= 0) return;
+    fixMonthly += v;
+    var s = (o.mes||1) - 1;
+    if(s > last) last = s;
+  });
+  var span = Math.max(6, Math.min(24, last + 1));
+  D.fixed.forEach(function(o){
+    var v = num(o.vl);
+    if(isNaN(v) || v <= 0) return;
+    for(var i=(o.mes||1)-1;i<span;i++) map[i] = (map[i]||0) + v;
+  });
+  D.sales.forEach(function(o){
+    var v = num(o.vl);
+    if(isNaN(v) || v <= 0) return;
+    salesTot += v;
+    var i = (o.mes||1) - 1;
+    if(i < span) map[i] = (map[i]||0) - v;
+  });
+
+  var arr = [];
+  for(var i=0;i<span;i++) arr.push(map[i] || 0);
+
+  var peak = 0, peakM = 1, total = 0;
+  arr.forEach(function(v,i){ if(v > peak){ peak = v; peakM = i+1; } total += v; });
+
+  document.getElementById('m-r').innerHTML =
+      '<div class="metric"><b>'+(peak>0?money(peak):'—')+'</b><span>Pico (M'+peakM+')</span></div>'
+    + '<div class="metric"><b>'+money(fixMonthly)+'</b><span>Fixas/mês</span></div>'
+    + '<div class="metric"><b>−'+money(salesTot)+'</b><span>Abatimento</span></div>';
+
+  var barsEls = [document.getElementById('bars'), document.getElementById('bars-top')];
+  function paintBars(html){
+    barsEls.forEach(function(el){ if(el) el.innerHTML = html; });
+  }
+  if(arr.every(function(v){ return v === 0; })){
+    paintBars('<div class="blank" style="width:100%;border:none;">Cadastre itens ou contas pra ver a projeção.</div>');
+    return;
+  }
+  var top = Math.max.apply(null, arr.map(Math.abs).concat([1]));
+  paintBars(arr.map(function(v,i){
+    var h = Math.max(4, (Math.abs(v)/top) * 104);
+    var neg = v < 0;
+    var t = v === 0 ? '' : (neg ? '+'+moneyShort(Math.abs(v)) : moneyShort(v));
+    return '<div class="bcol"><div class="bval">'+t+'</div><div class="bar'+(neg?' neg':'')+'" style="height:'+h+'px"></div><div class="blbl">M'+(i+1)+'</div></div>';
+  }).join(''));
+}
+
+function draw(){ drawItems(); drawMetricsI(); drawFixed(); drawSales(); drawResumo(); }
+function afterChange(){ drawMetricsI(); drawResumo(); saveSoon(); }
+
+/* ---------- eventos: itens ---------- */
+listI.addEventListener('click', function(e){
+  var btn = e.target.closest('[data-a]');
+  if(!btn) return;
+  var card = e.target.closest('[data-i]');
+  if(!card) return;
+  var it = byId(D.items, card.getAttribute('data-i'));
+  if(!it) return;
+  var shopEl = e.target.closest('[data-s]');
+  var sid = shopEl ? shopEl.getAttribute('data-s') : null;
+  var a = btn.getAttribute('data-a');
+
+  if(a === 'delitem'){
+    if(!confirm('Remover '+(it.nm ? '"'+it.nm+'"' : 'este item')+'?')) return;
+    D.items = D.items.filter(function(x){ return x.id !== it.id; });
+    drawItems(); afterChange();
+  } else if(a === 'addshop'){
+    it.shops.push(mkShop());
+    drawItems(); saveSoon();
+  } else if(a === 'delshop' && sid){
+    if(it.shops.length <= 1) return;
+    it.shops = it.shops.filter(function(s){ return s.id !== sid; });
+    if(it.pick === sid) it.pick = null;
+    drawItems(); afterChange();
+  } else if(a === 'pick' && sid){
+    it.pick = (it.pick === sid) ? null : sid;
+    touchItem(it.id); afterChange();
+  }
+});
+
+listI.addEventListener('input', function(e){
+  var card = e.target.closest('[data-i]');
+  if(!card) return;
+  var it = byId(D.items, card.getAttribute('data-i'));
+  if(!it) return;
+  var k = e.target.getAttribute('data-k');
+  if(!k) return;
+  var shopEl = e.target.closest('[data-s]');
+
+  if(!shopEl && k === 'nm'){ it.nm = e.target.value; saveSoon(); return; }
+  if(shopEl){
+    var s = byId(it.shops, shopEl.getAttribute('data-s'));
+    if(!s) return;
+    s[k] = e.target.value;
+    if(k === 'lk'){
+      var a = shopEl.querySelector('.go');
+      if(a){ if(e.target.value){ a.href = e.target.value; a.classList.remove('off'); } else a.classList.add('off'); }
+    }
+    if(k === 'pr'){ touchItem(it.id); afterChange(); } else saveSoon();
+  }
+});
+
+listI.addEventListener('change', function(e){
+  var card = e.target.closest('[data-i]');
+  if(!card) return;
+  var it = byId(D.items, card.getAttribute('data-i'));
+  if(!it) return;
+  var a = e.target.getAttribute('data-a');
+  if(a === 'pri'){ it.pri = parseInt(e.target.value,10); drawItems(); afterChange(); }
+  else if(a === 'par'){ it.par = parseInt(e.target.value,10); touchItem(it.id); afterChange(); }
+  else if(a === 'mes'){ it.mes = parseInt(e.target.value,10); drawItems(); afterChange(); }
+});
+
+/* ---------- eventos: linhas simples ---------- */
+function bindLines(listEl, arrName, attr, redraw){
+  listEl.addEventListener('click', function(e){
+    if(!e.target.closest('[data-a="del"]')) return;
+    var row = e.target.closest('['+attr+']');
+    if(!row) return;
+    var id = row.getAttribute(attr);
+    var o = byId(D[arrName], id);
+    if(!confirm('Remover '+(o && o.nm ? '"'+o.nm+'"' : 'este item')+'?')) return;
+    D[arrName] = D[arrName].filter(function(x){ return x.id !== id; });
+    redraw(); drawResumo(); saveSoon();
+  });
+  listEl.addEventListener('input', function(e){
+    var row = e.target.closest('['+attr+']');
+    if(!row) return;
+    var o = byId(D[arrName], row.getAttribute(attr));
+    var k = e.target.getAttribute('data-k');
+    if(!o || !k) return;
+    o[k] = e.target.value;
+    redraw(); drawResumo(); saveSoon();
+  });
+  listEl.addEventListener('change', function(e){
+    var row = e.target.closest('['+attr+']');
+    if(!row) return;
+    var o = byId(D[arrName], row.getAttribute(attr));
+    var k = e.target.getAttribute('data-k');
+    if(!o || k !== 'mes') return;
+    o.mes = parseInt(e.target.value,10);
+    drawResumo(); saveSoon();
+  });
+}
+bindLines(document.getElementById('list-f'), 'fixed', 'data-f', drawFixed);
+bindLines(document.getElementById('list-v'), 'sales', 'data-v', drawSales);
+
+/* ---------- botoes ---------- */
+document.getElementById('b-add-i').addEventListener('click', function(){
+  D.items.push(mkItem());
+  drawItems(); afterChange();
+  requestAnimationFrame(function(){
+    var all = listI.querySelectorAll('.nm');
+    if(all.length) all[all.length-1].focus();
+  });
+});
+document.getElementById('b-add-f').addEventListener('click', function(){
+  D.fixed.push(mkFixed());
+  drawFixed(); drawResumo(); saveSoon();
+  requestAnimationFrame(function(){
+    var all = document.getElementById('list-f').querySelectorAll('.l-nm');
+    if(all.length) all[all.length-1].focus();
+  });
+});
+document.getElementById('b-add-v').addEventListener('click', function(){
+  D.sales.push(mkSale());
+  drawSales(); drawResumo(); saveSoon();
+  requestAnimationFrame(function(){
+    var all = document.getElementById('list-v').querySelectorAll('.l-nm');
+    if(all.length) all[all.length-1].focus();
+  });
+});
+document.getElementById('b-wipe').addEventListener('click', function(){
+  if(!confirm('Apaga itens, contas fixas e vendas. Continuar?')) return;
+  D = { items:[], fixed:[], sales:[] };
+  draw(); save();
+});
+
+/* ---------- abas ---------- */
+var tabs = document.querySelectorAll('.tab');
+for(var t=0;t<tabs.length;t++){
+  tabs[t].addEventListener('click', function(e){
+    var go = e.currentTarget.getAttribute('data-go');
+    var all = document.querySelectorAll('.tab');
+    for(var i=0;i<all.length;i++) all[i].classList.toggle('on', all[i] === e.currentTarget);
+    var ps = document.querySelectorAll('.panel');
+    for(var j=0;j<ps.length;j++) ps[j].classList.toggle('on', ps[j].id === 'p-'+go);
+  });
+}
+
+/* ---------- backup ---------- */
+var ta = document.getElementById('ta');
+var bkMsg = document.getElementById('bk-msg');
+
+/* guardar copia: folha de compartilhar do celular, com fallbacks */
+document.getElementById('b-share').addEventListener('click', function(){
+  var s = payload();
+  var quando = new Date().toLocaleString('pt-BR');
+  var texto = 'BACKUP ORÇAMENTO DA MUDANÇA — ' + quando
+    + '\n(guarda esta mensagem inteira; pra restaurar, cola tudo de volta no app)\n\n' + s;
+
+  if(navigator.share){
+    navigator.share({ title:'Backup do orçamento da mudança', text: texto })
+      .then(function(){ bkMsg.textContent = 'Cópia guardada em ' + quando + '.'; })
+      .catch(function(err){
+        if(err && err.name === 'AbortError'){ bkMsg.textContent = ''; return; }
+        copiar(texto, quando);
+      });
+  } else {
+    copiar(texto, quando);
+  }
+});
+
+function copiar(texto, quando){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texto).then(function(){
+      bkMsg.textContent = 'Copiado (' + quando + '). Cola nas Notas ou manda pra você mesma.';
+    }).catch(function(){ mostrarTexto(texto); });
+  } else {
+    mostrarTexto(texto);
+  }
+}
+function mostrarTexto(texto){
+  document.getElementById('det-manual').open = true;
+  ta.value = texto;
+  ta.focus(); ta.select();
+  bkMsg.textContent = 'Está selecionado abaixo — copia manualmente.';
+}
+
+document.getElementById('b-out').addEventListener('click', function(){
+  var s = payload();
+  ta.value = s;
+  ta.focus(); ta.select();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(s).then(function(){
+      bkMsg.textContent = 'Copiado. Cola nas Notas ou manda pra você mesma no WhatsApp.';
+    }).catch(function(){
+      bkMsg.textContent = 'Está selecionado acima — copia manualmente.';
+    });
+  } else {
+    bkMsg.textContent = 'Está selecionado acima — copia manualmente.';
+  }
+});
+document.getElementById('b-in').addEventListener('click', function(){
+  var raw = ta.value.trim();
+  if(!raw){ bkMsg.textContent = 'Cola o backup no campo acima primeiro.'; return; }
+  var ini = raw.indexOf('{');
+  var fim = raw.lastIndexOf('}');
+  if(ini === -1 || fim === -1 || fim <= ini){
+    bkMsg.textContent = 'Não achei os dados nesse texto. Confere se colou a mensagem inteira.';
+    return;
+  }
+  try{
+    var o = JSON.parse(raw.slice(ini, fim + 1));
+    D.items = Array.isArray(o.items) ? o.items : [];
+    D.fixed = Array.isArray(o.fixed) ? o.fixed : [];
+    D.sales = Array.isArray(o.sales) ? o.sales : [];
+    draw(); save();
+    bkMsg.textContent = 'Restaurado: ' + D.items.length + ' itens, ' + D.fixed.length + ' contas fixas, ' + D.sales.length + ' vendas.';
+  }catch(e){
+    bkMsg.textContent = 'Não consegui ler esse texto. Confere se colou inteiro, sem cortar.';
+  }
+});
+
+/* ---------- avisa antes de fechar com coisa nao salva ---------- */
+window.addEventListener('beforeunload', function(e){
+  if(dot.classList.contains('bad')){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+load();
+})();
+</script>
+</body>
+</html>
