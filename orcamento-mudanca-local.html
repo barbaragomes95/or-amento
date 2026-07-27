@@ -151,8 +151,8 @@
 
   <section class="panel on" id="p-i">
     <div class="chart">
-      <h3>Desembolso mês a mês</h3>
-      <p>Parcelas + contas fixas − vendas</p>
+      <h3>Compras mês a mês</h3>
+      <p>Só as parcelas dos itens — o total geral fica no Resumo</p>
       <div id="bars-top" class="bars"></div>
     </div>
     <div id="m-i" class="metrics"></div>
@@ -589,10 +589,7 @@ function lineHTML(o, kind, ph){
     + '<button class="x" data-a="del">✕</button>'
   + '</div>';
 }
-function drawFixed(){
-  document.getElementById('list-f').innerHTML = D.fixed.length
-    ? D.fixed.map(function(o){ return lineHTML(o,'f','Ex: Aluguel'); }).join('')
-    : '<div class="blank">Nenhuma conta fixa ainda.</div>';
+function drawFixedMetrics(){
   var t = 0;
   D.fixed.forEach(function(o){ var v = num(o.vl); if(!isNaN(v)) t += v; });
   document.getElementById('m-f').innerHTML =
@@ -600,20 +597,30 @@ function drawFixed(){
     + '<div class="metric"><b>'+D.fixed.length+'</b><span>Contas</span></div>'
     + '<div class="metric"><b>'+money(t*12)+'</b><span>Em 12 meses</span></div>';
 }
-function drawSales(){
-  document.getElementById('list-v').innerHTML = D.sales.length
-    ? D.sales.map(function(o){ return lineHTML(o,'v','Ex: sofá antigo'); }).join('')
-    : '<div class="blank">Nada cadastrado ainda.</div>';
+function drawFixed(){
+  document.getElementById('list-f').innerHTML = D.fixed.length
+    ? D.fixed.map(function(o){ return lineHTML(o,'f','Ex: Aluguel'); }).join('')
+    : '<div class="blank">Nenhuma conta fixa ainda.</div>';
+  drawFixedMetrics();
+}
+function drawSalesMetrics(){
   var t = 0;
   D.sales.forEach(function(o){ var v = num(o.vl); if(!isNaN(v)) t += v; });
   document.getElementById('m-v').innerHTML =
       '<div class="metric"><b>'+money(t)+'</b><span>Total esperado</span></div>'
     + '<div class="metric"><b>'+D.sales.length+'</b><span>Itens</span></div>';
 }
+function drawSales(){
+  document.getElementById('list-v').innerHTML = D.sales.length
+    ? D.sales.map(function(o){ return lineHTML(o,'v','Ex: sofá antigo'); }).join('')
+    : '<div class="blank">Nada cadastrado ainda.</div>';
+  drawSalesMetrics();
+}
 
 /* ---------- render: resumo ---------- */
+/* o grafico da aba Itens mostra so as parcelas dos itens; o do Resumo soma tudo */
 function drawResumo(){
-  var map = [], last = 5, fixMonthly = 0, salesTot = 0;
+  var mapI = [], map = [], last = 5, fixMonthly = 0, salesTot = 0;
 
   D.items.forEach(function(it){
     var p = picked(it);
@@ -622,6 +629,7 @@ function drawResumo(){
     for(var k=0;k<n;k++){
       var i = from + k;
       if(i > 35) continue;
+      mapI[i] = (mapI[i]||0) + each;
       map[i] = (map[i]||0) + each;
       if(i > last) last = i;
     }
@@ -647,8 +655,8 @@ function drawResumo(){
     if(i < span) map[i] = (map[i]||0) - v;
   });
 
-  var arr = [];
-  for(var i=0;i<span;i++) arr.push(map[i] || 0);
+  var arr = [], arrI = [];
+  for(var i=0;i<span;i++){ arr.push(map[i] || 0); arrI.push(mapI[i] || 0); }
 
   var peak = 0, peakM = 1, total = 0;
   arr.forEach(function(v,i){ if(v > peak){ peak = v; peakM = i+1; } total += v; });
@@ -658,21 +666,20 @@ function drawResumo(){
     + '<div class="metric"><b>'+money(fixMonthly)+'</b><span>Fixas/mês</span></div>'
     + '<div class="metric"><b>−'+money(salesTot)+'</b><span>Abatimento</span></div>';
 
-  var barsEls = [document.getElementById('bars'), document.getElementById('bars-top')];
-  function paintBars(html){
-    barsEls.forEach(function(el){ if(el) el.innerHTML = html; });
+  function barsHTML(a, vazio){
+    if(a.every(function(v){ return v === 0; })){
+      return '<div class="blank" style="width:100%;border:none;">'+vazio+'</div>';
+    }
+    var top = Math.max.apply(null, a.map(Math.abs).concat([1]));
+    return a.map(function(v,i){
+      var h = Math.max(4, (Math.abs(v)/top) * 104);
+      var neg = v < 0;
+      var t = v === 0 ? '' : (neg ? '+'+moneyShort(Math.abs(v)) : moneyShort(v));
+      return '<div class="bcol"><div class="bval">'+t+'</div><div class="bar'+(neg?' neg':'')+'" style="height:'+h+'px"></div><div class="blbl">M'+(i+1)+'</div></div>';
+    }).join('');
   }
-  if(arr.every(function(v){ return v === 0; })){
-    paintBars('<div class="blank" style="width:100%;border:none;">Cadastre itens ou contas pra ver a projeção.</div>');
-    return;
-  }
-  var top = Math.max.apply(null, arr.map(Math.abs).concat([1]));
-  paintBars(arr.map(function(v,i){
-    var h = Math.max(4, (Math.abs(v)/top) * 104);
-    var neg = v < 0;
-    var t = v === 0 ? '' : (neg ? '+'+moneyShort(Math.abs(v)) : moneyShort(v));
-    return '<div class="bcol"><div class="bval">'+t+'</div><div class="bar'+(neg?' neg':'')+'" style="height:'+h+'px"></div><div class="blbl">M'+(i+1)+'</div></div>';
-  }).join(''));
+  document.getElementById('bars').innerHTML = barsHTML(arr, 'Cadastre itens ou contas pra ver a projeção.');
+  document.getElementById('bars-top').innerHTML = barsHTML(arrI, 'Cadastre itens pra ver a projeção.');
 }
 
 function draw(){ drawItems(); drawMetricsI(); drawFixed(); drawSales(); drawResumo(); }
@@ -742,7 +749,7 @@ listI.addEventListener('change', function(e){
 });
 
 /* ---------- eventos: linhas simples ---------- */
-function bindLines(listEl, arrName, attr, redraw){
+function bindLines(listEl, arrName, attr, redraw, metrics){
   listEl.addEventListener('click', function(e){
     if(!e.target.closest('[data-a="del"]')) return;
     var row = e.target.closest('['+attr+']');
@@ -760,7 +767,8 @@ function bindLines(listEl, arrName, attr, redraw){
     var k = e.target.getAttribute('data-k');
     if(!o || !k) return;
     o[k] = e.target.value;
-    redraw(); drawResumo(); saveSoon();
+    /* so atualiza os totais — redesenhar a lista aqui derrubava o cursor do campo */
+    metrics(); drawResumo(); saveSoon();
   });
   listEl.addEventListener('change', function(e){
     var row = e.target.closest('['+attr+']');
@@ -772,8 +780,8 @@ function bindLines(listEl, arrName, attr, redraw){
     drawResumo(); saveSoon();
   });
 }
-bindLines(document.getElementById('list-f'), 'fixed', 'data-f', drawFixed);
-bindLines(document.getElementById('list-v'), 'sales', 'data-v', drawSales);
+bindLines(document.getElementById('list-f'), 'fixed', 'data-f', drawFixed, drawFixedMetrics);
+bindLines(document.getElementById('list-v'), 'sales', 'data-v', drawSales, drawSalesMetrics);
 
 /* ---------- botoes ---------- */
 document.getElementById('b-add-i').addEventListener('click', function(){
